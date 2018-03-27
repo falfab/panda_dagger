@@ -242,3 +242,11 @@ add_dependencies(panda_goal_generator ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catk
 target_link_libraries(panda_goal_generator
   ${catkin_LIBRARIES}
 )
+
+add_executable(panda_delta_moves
+  src/panda_delta_moves.cpp
+)
+add_dependencies(panda_delta_moves ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(panda_delta_moves
+  ${catkin_LIBRARIES}
+)
