@@ -27,8 +27,11 @@ void pose_callback(const geometry_msgs::PoseStampedConstPtr &pose)
     target_pose.pose.position.y = current_pose.pose.position.y + pose->pose.position.y;
     target_pose.pose.position.z = current_pose.pose.position.z + pose->pose.position.z;
 
-    ROS_INFO_NAMED("dagger", "Target pose: (x: %lf, y: %lf, z: %lf)",
-    target_pose.pose.position.x, target_pose.pose.position.y, target_pose.pose.position.z );
+    ROS_INFO_NAMED("dagger", "Target pose: (x: %lf, y: %lf, z: %lf, x1: %lf, y1: %lf, z1: %lf, w1: %lf)",
+    target_pose.pose.position.x, target_pose.pose.position.y, target_pose.pose.position.z ,
+    target_pose.pose.orientation.x, target_pose.pose.orientation.y, target_pose.pose.orientation.z,
+    target_pose.pose.orientation.w
+    );
 
     move_group->setPoseTarget(target_pose.pose);
     moveit::planning_interface::MoveGroupInterface::Plan my_plan;
