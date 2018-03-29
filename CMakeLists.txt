@@ -10,6 +10,7 @@ add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
     Eigen3
     roscpp
+    rospy
     moveit_msgs
     std_msgs
     moveit_core
