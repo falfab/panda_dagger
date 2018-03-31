@@ -111,7 +111,7 @@ find_package(Boost REQUIRED COMPONENTS system filesystem date_time thread)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES simple_master_goal
+#  LIBRARIES panda_ready_pos
 #  CATKIN_DEPENDS other_catkin_pkg
 #  DEPENDS system_lib
    CATKIN_DEPENDS
@@ -138,7 +138,7 @@ ${EIGEN3_INCLUDE_DIRS}
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/simple_master_goal.cpp
+#   src/${PROJECT_NAME}/panda_ready_pos.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -149,7 +149,7 @@ ${EIGEN3_INCLUDE_DIRS}
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/simple_master_goal_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/panda_ready_pos_node.cpp)
 
 
 
@@ -207,7 +207,7 @@ ${EIGEN3_INCLUDE_DIRS}
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_simple_master_goal.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_panda_ready_pos.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
@@ -215,23 +215,23 @@ ${EIGEN3_INCLUDE_DIRS}
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-add_executable(simple_master_goal src/simple_master_goal.cpp)
-target_link_libraries(simple_master_goal
+add_executable(panda_ready_pos src/panda_ready_pos.cpp)
+target_link_libraries(panda_ready_pos
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
 )
 
-add_executable(simple_master_random_goal src/simple_master_random_goal.cpp)
-target_link_libraries(simple_master_random_goal
+add_executable(panda_random_pos src/panda_random_pos.cpp)
+target_link_libraries(panda_random_pos
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
 )
 
-add_executable(panda_moves
-  src/panda_moves.cpp
+add_executable(panda_absolute_controller
+  src/panda_absolute_controller.cpp
 )
-add_dependencies(panda_moves ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(panda_moves
+add_dependencies(panda_absolute_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(panda_absolute_controller
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
 )
@@ -244,10 +244,18 @@ target_link_libraries(panda_goal_generator
   ${catkin_LIBRARIES}
 )
 
-add_executable(panda_delta_moves
-  src/panda_delta_moves.cpp
+add_executable(panda_delta_controller
+  src/panda_delta_controller.cpp
 )
-add_dependencies(panda_delta_moves ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(panda_delta_moves
+add_dependencies(panda_delta_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(panda_delta_controller
+  ${catkin_LIBRARIES}
+)
+
+add_executable(panda_teleop_key
+  src/panda_teleop_key.cpp
+)
+add_dependencies(panda_teleop_key ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(panda_teleop_key
   ${catkin_LIBRARIES}
 )

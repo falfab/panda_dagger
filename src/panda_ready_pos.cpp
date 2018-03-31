@@ -15,19 +15,10 @@
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "panda_goal_generator");
+  ros::init(argc, argv, "panda_ready_pos");
   ros::NodeHandle node_handle;
   ros::AsyncSpinner spinner(1);
   spinner.start();
-
-  double period;
-  node_handle.param<double>("period", period, 10.0);
-  ros::Duration duration(period);
-
-  std::string topic_pub;
-  node_handle.param<std::string>("topic_pub", topic_pub, "/dagger/pose");
-
-  ros::Publisher pose_pub = node_handle.advertise<geometry_msgs::PoseStamped>(topic_pub.c_str(), 1000);
 
   static const std::string PLANNING_GROUP = "panda_arm";
 
@@ -36,14 +27,22 @@ int main(int argc, char** argv)
 
   const robot_state::JointModelGroup* joint_model_group =
       move_group.getCurrentState()->getJointModelGroup(PLANNING_GROUP);
+  geometry_msgs::Pose target_pose1;
 
-  while (ros::ok())
-  {
-    geometry_msgs::PoseStamped randomPose = move_group.getRandomPose();
-    pose_pub.publish(randomPose);
-    ros::spinOnce();
-    duration.sleep();
-  }
+  target_pose1.orientation.x = 0.923955;
+  target_pose1.orientation.y = -0.382501;
+  target_pose1.orientation.z = -0.000045;
+  target_pose1.orientation.w = 0.000024;
+  target_pose1.position.x = 0.307049;
+  target_pose1.position.y = 0.000035;
+  target_pose1.position.z = 0.590206;
+  move_group.setPoseTarget(target_pose1);
+
+  moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+
+  bool success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+
+  move_group.move();
 
   ros::shutdown();
   return 0;

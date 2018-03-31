@@ -5,7 +5,7 @@
 
     <include file="$(find panda_moveit_config)/launch/core.launch"/>
 
-    <node pkg="panda_dagger" type="panda_moves" name="panda_moves">
+    <node pkg="panda_dagger" type="panda_absolute_controller" name="panda_absolute_controller">
         <param name="pose_topic" value="$(arg pose_topic)"/>
     </node>
 

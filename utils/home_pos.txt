@@ -1,0 +1,16 @@
+"header:
+  seq: 0
+  stamp:
+    secs: 0
+    nsecs: 0
+  frame_id: ''
+pose:
+  position:
+    x: 0.307049
+    y: 0.000035
+    z: 0.590206
+  orientation:
+    x: 0.923955
+    y: -0.382501
+    z: -0.00045
+    w: 0.000024"
