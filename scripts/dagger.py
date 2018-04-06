@@ -2,9 +2,11 @@
 
 
 import math
+import pickle
 import random
 import rospy
 from geometry_msgs.msg import PoseStamped, Pose, Point
+from sensor_msgs.msg import Image
 
 TOLERANCE = 0.001
 TOLERANCE_Z = 0.01
@@ -21,6 +23,7 @@ RING_RADIUS = 0.13971 / 2
 GOAL_HEIGHT = RING_Z + 0.15
 GRASP_DISTANCE = 0.009  # The distance to begin open pinze
 
+global LAST_IMAGE
 
 def get_coeff(robot_pose_stamped, ring_point):
     robot_point = robot_pose_stamped.pose.position
@@ -80,16 +83,18 @@ def get_master_policy(robot_pose_stamped, ring_point):
         return Point(0., 0., 0.)
 
 
+def image_callback(image_ptr):
+    global LAST_IMAGE
+    LAST_IMAGE = image_ptr.data
+
 def main():
     rospy.init_node('dagger_test_node')
     random.seed(rospy.get_time())
 
+    sub_camera = rospy.Subscriber("/vrep_ros_interface/image", Image, image_callback)
+
     # set ring
     pub_ring = rospy.Publisher(DEFAULT_RING_POSITION_TOPIC, Pose, queue_size=1)
-    ring_point = get_valid_ring_position()
-    ring_pose = Pose()
-    ring_pose.position = ring_point
-
     # home pose
     # (x: 0.307049, y: 0.000035, z: 0.590206, x1: 0.923955, y1: -0.382501, z1: -0.000045, w1: 0.000024)
     start_pose_stamped = PoseStamped()
@@ -117,34 +122,47 @@ def main():
     init_ring = True
     init_panda = True
 
-    while not rospy.is_shutdown():
-        if init_panda:
-            pub_controller.publish(start_pose_stamped)
-            init_panda = False
-            rospy.sleep(5)
-            continue
-        if init_ring:
-            pub_ring.publish(ring_pose)
-            # delta between vrep and rviz on x of 0.5!!
-            ring_pose.position.x += 0.5
-            init_ring = False
-            rospy.sleep(1)
-            continue
-        if get_coeff(current_pose_stamped, ring_point) < GRASP_DISTANCE:
-            break
+    dataset = []
 
-        new_point = get_master_policy(current_pose_stamped, ring_point)
+    for i in range(1):
+        while not rospy.is_shutdown():
+            if init_panda:
+                pub_controller.publish(start_pose_stamped)
+                init_panda = False
+                rospy.sleep(5)
+                continue
+            if init_ring:
+                ring_point = get_valid_ring_position()
+                ring_pose = Pose()
+                ring_pose.position = ring_point
+                pub_ring.publish(ring_pose)
+                # delta between vrep and rviz on x of 0.5!!
+                ring_pose.position.x += 0.5
+                init_ring = False
+                rospy.sleep(1)
+                continue
+            if get_coeff(current_pose_stamped, ring_point) < GRASP_DISTANCE:
+                rospy.sleep(3)
+                init_ring = True
+                init_panda = True
+                break
 
-        delta_pose.pose.position = new_point
+            new_point = get_master_policy(current_pose_stamped, ring_point)
+            delta_pose.pose.position = new_point
+            current_pose_stamped.pose.position.x = current_pose_stamped.pose.position.x + new_point.x
+            current_pose_stamped.pose.position.y = current_pose_stamped.pose.position.y + new_point.y
+            current_pose_stamped.pose.position.z = current_pose_stamped.pose.position.z + new_point.z
 
-        current_pose_stamped.pose.position.x = current_pose_stamped.pose.position.x + new_point.x
-        current_pose_stamped.pose.position.y = current_pose_stamped.pose.position.y + new_point.y
-        current_pose_stamped.pose.position.z = current_pose_stamped.pose.position.z + new_point.z
+            # append images and points to dataset
+            dataset.append((LAST_IMAGE, new_point))
 
-        # do delta movement
-        pub_delta_controller.publish(delta_pose)
+            # do delta movement
+            pub_delta_controller.publish(delta_pose)
 
-        rospy.sleep(1)
+            rospy.sleep(2)
+    
+    with open("dataset.pkl", mode="wb") as fd:
+        pickle.dump(dataset, fd)
 
 
 if __name__ == '__main__':
