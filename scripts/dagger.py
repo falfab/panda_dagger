@@ -5,11 +5,13 @@ import math
 import pickle
 import random
 import rospy
+import moveit_commander
 from geometry_msgs.msg import PoseStamped, Pose, Point
 from sensor_msgs.msg import Image
 
 TOLERANCE = 0.001
 TOLERANCE_Z = 0.01
+POSITION_TOLERANCE = 0.001
 MOVEMENT_FRACTION = 1.0 / 20
 
 DEFAULT_RING_POSITION_TOPIC = '/ring_position'
@@ -24,6 +26,8 @@ GOAL_HEIGHT = RING_Z + 0.15
 GRASP_DISTANCE = 0.009  # The distance to begin open pinze
 
 global LAST_IMAGE
+LAST_IMAGE = None
+
 
 def get_coeff(robot_pose_stamped, ring_point):
     robot_point = robot_pose_stamped.pose.position
@@ -56,6 +60,20 @@ def get_grasp_point(ring_point):
                                          0) else (ring_point.y + RING_RADIUS),
         GOAL_HEIGHT
     )
+    
+
+def equal_poses(pose1, pose2):
+    val = abs(pose1.position.x - pose2.position.x) < POSITION_TOLERANCE and \
+          abs(pose1.position.y - pose2.position.y) < POSITION_TOLERANCE and \
+          abs(pose1.position.z - pose2.position.z) < POSITION_TOLERANCE
+    return val
+
+
+def wait_move(target_pose, move_group):
+    robot_real_pose_stamped = move_group.get_current_pose()
+    while not equal_poses(robot_real_pose_stamped.pose, target_pose.pose):
+        robot_real_pose_stamped = move_group.get_current_pose()
+        rospy.sleep(0.1)
 
 
 def get_master_policy(robot_pose_stamped, ring_point):
@@ -87,11 +105,14 @@ def image_callback(image_ptr):
     global LAST_IMAGE
     LAST_IMAGE = image_ptr.data
 
+
 def main():
     rospy.init_node('dagger_test_node')
     random.seed(rospy.get_time())
+    
+    move_group = moveit_commander.MoveGroupCommander('panda_arm')
 
-    sub_camera = rospy.Subscriber("/vrep_ros_interface/image", Image, image_callback)
+    rospy.Subscriber("/vrep_ros_interface/image", Image, image_callback)
 
     # set ring
     pub_ring = rospy.Publisher(DEFAULT_RING_POSITION_TOPIC, Pose, queue_size=1)
@@ -129,7 +150,8 @@ def main():
             if init_panda:
                 pub_controller.publish(start_pose_stamped)
                 init_panda = False
-                rospy.sleep(5)
+
+                wait_move(start_pose_stamped, move_group)
                 continue
             if init_ring:
                 ring_point = get_valid_ring_position()
@@ -159,8 +181,10 @@ def main():
             # do delta movement
             pub_delta_controller.publish(delta_pose)
 
-            rospy.sleep(2)
-    
+            # wait until movement is done
+            wait_move(current_pose_stamped, move_group)
+
+    # save dataset to file
     with open("dataset.pkl", mode="wb") as fd:
         pickle.dump(dataset, fd)
 
