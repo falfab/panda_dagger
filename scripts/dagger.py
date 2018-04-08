@@ -1,12 +1,11 @@
 #!/usr/bin/env python
-
-
 import math
 import pickle
 import random
 import rospy
 import moveit_commander
 from geometry_msgs.msg import PoseStamped, Pose, Point
+from sensor_msgs.msg import JointState
 from sensor_msgs.msg import Image
 
 TOLERANCE = 0.001
@@ -60,20 +59,38 @@ def get_grasp_point(ring_point):
                                          0) else (ring_point.y + RING_RADIUS),
         GOAL_HEIGHT
     )
-    
+
 
 def equal_poses(pose1, pose2):
     val = abs(pose1.position.x - pose2.position.x) < POSITION_TOLERANCE and \
-          abs(pose1.position.y - pose2.position.y) < POSITION_TOLERANCE and \
-          abs(pose1.position.z - pose2.position.z) < POSITION_TOLERANCE
+        abs(pose1.position.y - pose2.position.y) < POSITION_TOLERANCE and \
+        abs(pose1.position.z - pose2.position.z) < POSITION_TOLERANCE
     return val
 
 
-def wait_move(target_pose, move_group):
-    robot_real_pose_stamped = move_group.get_current_pose()
-    while not equal_poses(robot_real_pose_stamped.pose, target_pose.pose):
+def equal_joint_states(joint_array1, joint_array2):
+    if len(joint_array1) != len(joint_array2):
+        return False
+    for (index, joint1) in enumerate(joint_array1):
+        if abs(joint1 - joint_array2[index]) > POSITION_TOLERANCE:
+            return False
+    return True
+
+
+def wait_move(target, move_group):
+    if isinstance(target, PoseStamped) or isinstance(target, Pose):
         robot_real_pose_stamped = move_group.get_current_pose()
-        rospy.sleep(0.1)
+        while not equal_poses(robot_real_pose_stamped.pose, target.pose):
+            robot_real_pose_stamped = move_group.get_current_pose()
+            rospy.sleep(0.1)
+    elif isinstance(target, JointState):
+        real_robot_joint_state = move_group.get_current_joint_values()
+        while not equal_joint_states(real_robot_joint_state, target.position):
+            real_robot_joint_state = move_group.get_current_joint_values()
+            rospy.sleep(0.1)
+    else:
+        raise ValueError(
+            'target object passed to wait_move() is neither a pose or jointstates')
 
 
 def get_master_policy(robot_pose_stamped, ring_point):
@@ -101,6 +118,22 @@ def get_master_policy(robot_pose_stamped, ring_point):
         return Point(0., 0., 0.)
 
 
+def init_delta_pose_stamped():
+    delta_pose = PoseStamped()
+    delta_pose.pose.position = Point(0., 0., 0.)
+    delta_pose.pose.orientation.x = 0.923955
+    delta_pose.pose.orientation.y = -0.382501
+    delta_pose.pose.orientation.z = -0.000045
+    delta_pose.pose.orientation.w = 0.000024
+    return delta_pose
+
+
+def init_joint_states():
+    joint_states = JointState()
+    joint_states.position = [0, -0.785, 0, -2.356, 0, 1.571, 0.785]
+    return joint_states
+
+
 def image_callback(image_ptr):
     global LAST_IMAGE
     LAST_IMAGE = image_ptr.data
@@ -109,49 +142,38 @@ def image_callback(image_ptr):
 def main():
     rospy.init_node('dagger_test_node')
     random.seed(rospy.get_time())
-    
+
     move_group = moveit_commander.MoveGroupCommander('panda_arm')
 
     rospy.Subscriber("/vrep_ros_interface/image", Image, image_callback)
 
     # set ring
     pub_ring = rospy.Publisher(DEFAULT_RING_POSITION_TOPIC, Pose, queue_size=1)
-    # home pose
-    # (x: 0.307049, y: 0.000035, z: 0.590206, x1: 0.923955, y1: -0.382501, z1: -0.000045, w1: 0.000024)
-    start_pose_stamped = PoseStamped()
-    start_pose_stamped.pose.position.x = 0.307049
-    start_pose_stamped.pose.position.y = 0.000035
-    start_pose_stamped.pose.position.z = 0.590206
-    start_pose_stamped.pose.orientation.x = 0.923955
-    start_pose_stamped.pose.orientation.y = -0.382501
-    start_pose_stamped.pose.orientation.z = -0.000045
-    start_pose_stamped.pose.orientation.w = 0.000024
-    current_pose_stamped = start_pose_stamped
 
     # set robot to start pose!
-    pub_controller = rospy.Publisher('/dagger/pose', PoseStamped, queue_size=1)
+    start_joint_states = init_joint_states()
+    pub_joint_controller = rospy.Publisher(
+        '/dagger/joint_states', JointState, queue_size=1)
 
     # delta robot
     pub_delta_controller = rospy.Publisher(
         '/dagger/delta_pose', PoseStamped, queue_size=1)
-    delta_pose = PoseStamped()
-    delta_pose.pose.position = Point(0., 0., 0.)
-    delta_pose.pose.orientation = start_pose_stamped.pose.orientation
+    delta_pose = init_delta_pose_stamped()
 
     rospy.sleep(3)
 
     init_ring = True
     init_panda = True
-
     dataset = []
+    current_pose_stamped = None
 
     for i in range(1):
         while not rospy.is_shutdown():
             if init_panda:
-                pub_controller.publish(start_pose_stamped)
+                pub_joint_controller.publish(start_joint_states)
                 init_panda = False
-
-                wait_move(start_pose_stamped, move_group)
+                wait_move(start_joint_states, move_group)
+                current_pose_stamped = move_group.get_current_pose()
                 continue
             if init_ring:
                 ring_point = get_valid_ring_position()

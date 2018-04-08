@@ -259,3 +259,11 @@ add_dependencies(panda_teleop_key ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_E
 target_link_libraries(panda_teleop_key
   ${catkin_LIBRARIES}
 )
+
+add_executable(panda_joint_controller
+  src/panda_joint_controller.cpp
+)
+add_dependencies(panda_joint_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(panda_joint_controller
+  ${catkin_LIBRARIES}
+)

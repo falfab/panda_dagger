@@ -37,15 +37,11 @@ int main(int argc, char** argv)
   std::string pose_topic;
   node_handle.param<std::string>("pose_topic", pose_topic, "/dagger/pose");
 
-  ros::Subscriber s = node_handle.subscribe<geometry_msgs::PoseStamped>(pose_topic.c_str(), 1000, pose_callback);
+  node_handle.subscribe<geometry_msgs::PoseStamped>(pose_topic.c_str(), 1000, pose_callback);
 
   static const std::string PLANNING_GROUP = "panda_arm";
 
   move_group = new moveit::planning_interface::MoveGroupInterface(PLANNING_GROUP);
-  moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
-
-  const robot_state::JointModelGroup* joint_model_group =
-      move_group->getCurrentState()->getJointModelGroup(PLANNING_GROUP);
 
   ros::spin();
   ros::shutdown();
