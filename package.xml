@@ -35,6 +35,7 @@
   <!-- Examples: -->
   <!-- Use depend as a shortcut for packages that are both build and exec dependencies -->
   <depend>roscpp</depend>
+  <depend>rospy</depend>
   <depend>std_msgs</depend>
   <depend>moveit_msgs</depend>
   <depend>moveit_core</depend>
