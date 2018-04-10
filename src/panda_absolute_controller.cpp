@@ -37,7 +37,7 @@ int main(int argc, char** argv)
   std::string pose_topic;
   node_handle.param<std::string>("pose_topic", pose_topic, "/dagger/pose");
 
-  node_handle.subscribe<geometry_msgs::PoseStamped>(pose_topic.c_str(), 1000, pose_callback);
+  ros::Subscriber s = node_handle.subscribe<geometry_msgs::PoseStamped>(pose_topic.c_str(), 1000, pose_callback);
 
   static const std::string PLANNING_GROUP = "panda_arm";
 

@@ -45,11 +45,16 @@ def main():
     for i in range(1):
         while not rospy.is_shutdown():
             if init_panda:
+                # TODO: Da resettare target_joint_states alla posizione iniziale
+                print "moving to: ", moveit_handler.target_joint_states
                 pub_joint_controller.publish(moveit_handler.target_joint_states)
                 init_panda = False
+                print "wait robot moving..."
                 moveit_handler.wait(moveit_handler.target_joint_states)
+                print "done."
                 continue
             if init_ring:
+                print "setting ring to random pose"
                 ring_handler.set_random_valid_pose()
                 ring_pose = ring_handler.get_ring_pose()
                 pub_ring.publish(ring_pose)
@@ -63,10 +68,13 @@ def main():
                 init_ring = True
                 init_panda = True
                 break
+            print "compute master policy"
             moveit_handler.compute_master_policy(ring_handler)
             pub_delta_controller.publish(moveit_handler.delta_pose)
             moveit_handler.update_target_pose()
+            print "wait robot moving..."
             moveit_handler.wait(moveit_handler.target_pose)
+            print "done."
             dataset_handler.append((LAST_IMAGE, moveit_handler.current_pose.pose.position))
         
     dataset_handler.save()
