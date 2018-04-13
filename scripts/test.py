@@ -7,9 +7,15 @@ from moveit_handler import MoveItHandler
 from ring_handler import RingHandler
 from dataset_handler import DatasetHandler
 from config_handler import ConfigHandler
+from geometry_msgs.msg import PoseStamped, Pose, Point
 
 from geometry_msgs.msg import PoseStamped, Pose, Point
 from sensor_msgs.msg import Image, JointState
+
+from agent import Agent
+
+import tensorflow as tf
+import numpy as np
 
 # Setting current working directory to the directory containing the file
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
@@ -26,6 +32,11 @@ def image_callback(image_ptr):
 
 
 def main():
+
+    sess = tf.InteractiveSession()
+    model = Agent(name='model_trained', sess=sess)
+    model.load_model()
+
     rospy.init_node('dagger_test_node')
 
     moveit_handler = MoveItHandler()
@@ -44,7 +55,7 @@ def main():
     for i in range(10000):
         print "Iteration: ", i
         
-        dataset_handler = DatasetHandler(i)        
+        #dataset_handler = DatasetHandler(i)        
         while not rospy.is_shutdown():
             if init_panda:
                 # TODO: Da resettare target_joint_states alla posizione iniziale
@@ -70,19 +81,26 @@ def main():
                 init_ring = True
                 init_panda = True
                 
-                dataset_handler.save()
+                #dataset_handler.save()
                 break
             print "compute master policy"
-            moveit_handler.compute_master_policy(ring_handler)
-            pub_delta_controller.publish(moveit_handler.delta_pose)
-            moveit_handler.update_target_pose()
+            #moveit_handler.compute_master_policy(ring_handler)
+
+            act = model.predict(LAST_IMAGE)
+
+            delta_pose = PoseStamped()
+            delta_pose.pose.position = Point(act[0],act[1],act[2])
+            delta_pose.pose.orientation.x = 0.923955
+            delta_pose.pose.orientation.y = -0.382501
+            delta_pose.pose.orientation.z = -0.000045
+            delta_pose.pose.orientation.w = 0.000024
+
+            pub_delta_controller.publish(delta_pose)
+
+            moveit_handler.update_target_pose(delta_pose)
             print "wait robot moving..."
             moveit_handler.wait(moveit_handler.target_pose)
             print "done."
-            dataset_handler.append((LAST_IMAGE, moveit_handler.current_pose.pose.position))
-            
-        
-
 
 if __name__ == '__main__':
     main()

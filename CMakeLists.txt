@@ -8,7 +8,6 @@ add_compile_options(-std=c++11)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-    Eigen3
     roscpp
     rospy
     moveit_msgs
@@ -118,8 +117,6 @@ catkin_package(
      moveit_core
      moveit_ros_planning_interface
      interactive_markers
-   DEPENDS
-     EIGEN3
 )
 
 ###########
@@ -133,7 +130,6 @@ include_directories(
 # include
 ${catkin_INCLUDE_DIRS}
 ${Boost_INCLUDE_DIR}
-${EIGEN3_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library

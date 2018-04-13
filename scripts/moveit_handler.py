@@ -51,12 +51,12 @@ class MoveItHandler(ConfigHandler):
 
         if isinstance(target, PoseStamped) or isinstance(target, Pose):
             self.update_current_pose()
-            while not self.equal_poses(self.current_pose.pose, target.pose):
+            while not rospy.is_shutdown() and not self.equal_poses(self.current_pose.pose, target.pose):
                 self.update_current_pose()
                 rospy.sleep(0.1)
         elif isinstance(target, JointState):
             self.update_current_joint_values()
-            while not self.equal_joint_states(self.current_joint_states, target.position):
+            while not rospy.is_shutdown() and not self.equal_joint_states(self.current_joint_states, target.position):
                 self.update_current_joint_values()
                 rospy.sleep(0.1)
         else:
