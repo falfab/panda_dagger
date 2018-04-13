@@ -12,10 +12,12 @@ from geometry_msgs.msg import PoseStamped, Pose, Point
 from geometry_msgs.msg import PoseStamped, Pose, Point
 from sensor_msgs.msg import Image, JointState
 
-from agent import Agent
+import agent
 
 import tensorflow as tf
 import numpy as np
+
+import cv_bridge
 
 # Setting current working directory to the directory containing the file
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
@@ -26,15 +28,15 @@ global LAST_IMAGE
 LAST_IMAGE = None
 
 
-def image_callback(image_ptr):
+def image_callback(image):
     global LAST_IMAGE
-    LAST_IMAGE = image_ptr.data
+    LAST_IMAGE = image
 
 
 def main():
 
     sess = tf.InteractiveSession()
-    model = Agent(name='model_trained', sess=sess)
+    model = agent.Agent(name='model_trained', sess=sess)
     model.load_model()
 
     rospy.init_node('dagger_test_node')
@@ -52,6 +54,7 @@ def main():
     init_ring = True
     init_panda = True
 
+    bridge = cv_bridge.CvBridge()
     for i in range(10000):
         print "Iteration: ", i
         
@@ -86,10 +89,12 @@ def main():
             print "compute master policy"
             #moveit_handler.compute_master_policy(ring_handler)
 
-            act = model.predict(LAST_IMAGE)
+            mat = bridge.imgmsg_to_cv2(LAST_IMAGE, desired_encoding='passthrough')
+            act = model.predict( np.reshape(mat,
+                (1, agent.img_dim[0], agent.img_dim[1], agent.img_dim[2])))
 
             delta_pose = PoseStamped()
-            delta_pose.pose.position = Point(act[0],act[1],act[2])
+            delta_pose.pose.position = Point(act[0][0],act[0][1],act[0][2])
             delta_pose.pose.orientation.x = 0.923955
             delta_pose.pose.orientation.y = -0.382501
             delta_pose.pose.orientation.z = -0.000045
@@ -97,7 +102,7 @@ def main():
 
             pub_delta_controller.publish(delta_pose)
 
-            moveit_handler.update_target_pose(delta_pose)
+            moveit_handler.update_target_pose()
             print "wait robot moving..."
             moveit_handler.wait(moveit_handler.target_pose)
             print "done."
