@@ -30,7 +30,6 @@ def main():
 
     moveit_handler = MoveItHandler()
     ring_handler = RingHandler()
-    dataset_handler = DatasetHandler()
 
     rospy.Subscriber("/vrep_ros_interface/image", Image, image_callback)
 
@@ -42,7 +41,10 @@ def main():
     init_ring = True
     init_panda = True
 
-    for i in range(1):
+    for i in range(10000):
+        print "Iteration: ", i
+        
+        dataset_handler = DatasetHandler(i)        
         while not rospy.is_shutdown():
             if init_panda:
                 # TODO: Da resettare target_joint_states alla posizione iniziale
@@ -67,6 +69,8 @@ def main():
                 rospy.sleep(3)
                 init_ring = True
                 init_panda = True
+                
+                dataset_handler.save()
                 break
             print "compute master policy"
             moveit_handler.compute_master_policy(ring_handler)
@@ -76,8 +80,8 @@ def main():
             moveit_handler.wait(moveit_handler.target_pose)
             print "done."
             dataset_handler.append((LAST_IMAGE, moveit_handler.current_pose.pose.position))
+            
         
-    dataset_handler.save()
 
 
 if __name__ == '__main__':

@@ -3,8 +3,9 @@ import pickle
 
 
 class DatasetHandler():
-    def __init__(self):
+    def __init__(self, num=None):
         self.dataset = []
+        self.outfile = "../dataset/dataset%d.pkl" % num if num else "../dataset/dataset.pkl"
         if not os.path.exists("../dataset"):
             os.mkdir("../dataset")
 
@@ -12,5 +13,5 @@ class DatasetHandler():
         self.dataset.append(img_pos_tuple)
 
     def save(self):
-        with open("../dataset/dataset.pkl", mode="wb") as fd:
+        with open(self.outfile, mode="wb") as fd:
             pickle.dump(self.dataset, fd)
