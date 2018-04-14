@@ -94,6 +94,7 @@ def main():
                 (1, agent.img_dim[0], agent.img_dim[1], agent.img_dim[2])))
 
             delta_pose = PoseStamped()
+            print act[0][0],act[0][1],act[0][2]
             delta_pose.pose.position = Point(act[0][0],act[0][1],act[0][2])
             delta_pose.pose.orientation.x = 0.923955
             delta_pose.pose.orientation.y = -0.382501
