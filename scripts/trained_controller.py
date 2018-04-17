@@ -55,7 +55,7 @@ def main():
     init_panda = True
 
     bridge = cv_bridge.CvBridge()
-    for i in range(10000):
+    for i in range(5):
         print "Iteration: ", i
         
         #dataset_handler = DatasetHandler(i)        
@@ -87,21 +87,14 @@ def main():
                 #dataset_handler.save()
                 break
             print "compute master policy"
-            #moveit_handler.compute_master_policy(ring_handler)
+            moveit_handler.compute_master_policy(ring_handler)
 
             mat = bridge.imgmsg_to_cv2(LAST_IMAGE, desired_encoding='passthrough')
-            act = model.predict( np.reshape(mat,
-                (1, agent.img_dim[0], agent.img_dim[1], agent.img_dim[2])))
 
-            delta_pose = PoseStamped()
-            print act[0][0],act[0][1],act[0][2]
-            delta_pose.pose.position = Point(act[0][0],act[0][1],act[0][2])
-            delta_pose.pose.orientation.x = 0.923955
-            delta_pose.pose.orientation.y = -0.382501
-            delta_pose.pose.orientation.z = -0.000045
-            delta_pose.pose.orientation.w = 0.000024
+            print "compute trained policy"
+            moveit_handler.compute_trained_policy(model,mat)
 
-            pub_delta_controller.publish(delta_pose)
+            pub_delta_controller.publish(moveit_handler.delta_pose)
 
             moveit_handler.update_target_pose()
             print "wait robot moving..."

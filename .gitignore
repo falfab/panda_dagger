@@ -3,3 +3,5 @@
 *.pkl
 
 *.pyc
+
+scripts/model_trained.npz

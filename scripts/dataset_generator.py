@@ -79,7 +79,7 @@ def main():
             print "wait robot moving..."
             moveit_handler.wait(moveit_handler.target_pose)
             print "done."
-            dataset_handler.append((LAST_IMAGE, moveit_handler.current_pose.pose.position))
+            dataset_handler.append((LAST_IMAGE, moveit_handler.delta_pose.pose.position))
             
         
 

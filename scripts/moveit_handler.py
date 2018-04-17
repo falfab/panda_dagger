@@ -4,6 +4,8 @@ import rospy
 from config_handler import ConfigHandler
 from geometry_msgs.msg import PoseStamped, Pose, Point
 from sensor_msgs.msg import JointState
+import numpy as np
+import agent
 
 
 class MoveItHandler(ConfigHandler):
@@ -112,3 +114,14 @@ class MoveItHandler(ConfigHandler):
             self.delta_pose.pose.position = Point(0., 0., ss * -1.)
         else:
             self.delta_pose.pose.position = Point(0., 0., 0.)
+        print self.delta_pose.pose.position.x, self.delta_pose.pose.position.y, self.delta_pose.pose.position.z
+
+    def compute_trained_policy(self, net, image):
+        """
+        TODO
+        """
+        act = net.predict( np.reshape(image,
+            (1, agent.img_dim[0], agent.img_dim[1], agent.img_dim[2])))
+
+        print act[0][0],act[0][1],act[0][2]
+        self.delta_pose.pose.position = Point(act[0][0],act[0][1],act[0][2])
