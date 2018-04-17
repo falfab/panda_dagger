@@ -32,11 +32,11 @@ image_all  = np.zeros( (len(data),agent.img_dim[0], agent.img_dim[1], agent.img_
 action_all = np.zeros( (len(data),agent.n_action) )
 bridge = cv_bridge.CvBridge()
 for index, d in enumerate(data):
-    if index % 100 == 0:
+    if index % 1000 == 0:
         print "concatenated",index,"/",len(data) 
 
     mat = bridge.imgmsg_to_cv2(d[0], desired_encoding='passthrough')
-    action = [ d[1].x,d[1].y,d[1].z]
+    action = [d[1].x,d[1].y,d[1].z]
     image_all[index] = mat
     action_all[index] = action
 
@@ -44,7 +44,7 @@ del data
 
 # train
 print ('start training')
-model.train(image_all, action_all, print_freq=2)
+model.train(image_all, action_all, print_freq=5)
 
 # salva il modello
 model.save_model()
