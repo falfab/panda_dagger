@@ -10,10 +10,13 @@
 
 #include <moveit_visual_tools/moveit_visual_tools.h>
 
+#include <std_msgs/Bool.h>
+
 #include <ros/ros.h>
 #include <iostream>
 
 moveit::planning_interface::MoveGroupInterface* move_group;
+ros::Publisher planning_result_pub;
 
 void pose_callback(const geometry_msgs::PoseStampedConstPtr& pose)
 {
@@ -24,6 +27,10 @@ void pose_callback(const geometry_msgs::PoseStampedConstPtr& pose)
 
   ROS_INFO_NAMED("dagger", "Visualizing plan 1 (pose goal) %s", success ? "" : "FAILED");
   move_group->move();
+
+  std_msgs::Bool result_msg;
+  result_msg.data = success;
+  planning_result_pub.publish(result_msg);
 }
 
 int main(int argc, char** argv)
@@ -31,7 +38,7 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "panda_absolute_controller");
   ros::NodeHandle node_handle;
 
-  ros::AsyncSpinner spinner(1);
+  ros::AsyncSpinner spinner(2);
   spinner.start();
 
   std::string pose_topic;
@@ -39,6 +46,10 @@ int main(int argc, char** argv)
 
   ros::Subscriber s = node_handle.subscribe<geometry_msgs::PoseStamped>(pose_topic.c_str(), 1000, pose_callback);
 
+  std::string planning_result_topic;
+  node_handle.param<std::string>("abs_planning_result_topic", planning_result_topic, "/dagger/planning_result/abs");
+  planning_result_pub = node_handle.advertise<std_msgs::Bool>(planning_result_topic.c_str(), 1000);
+  
   static const std::string PLANNING_GROUP = "panda_arm";
 
   move_group = new moveit::planning_interface::MoveGroupInterface(PLANNING_GROUP);

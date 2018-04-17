@@ -3,19 +3,25 @@
     <arg name="pose_topic" default="/dagger/pose"/>
     <arg name="pose_delta_topic" default="/dagger/delta_pose"/>
     <arg name="joint_states_topic" default="/dagger/joint_states"/>
+    <arg name="joint_planning_result_topic" default="/dagger/planning_result/joint"/>
+    <arg name="delta_planning_result_topic" default="/dagger/planning_result/delta"/>
+    <arg name="abs_planning_result_topic" default="/dagger/planning_result/abs"/>
 
     <include file="$(find panda_moveit_config)/launch/core.launch"/>
 
     <node pkg="panda_dagger" type="panda_joint_controller" name="panda_joint_controller">
         <param name="joint_states_topic" value="$(arg joint_states_topic)"/>
+        <param name="joint_planning_result_topic" value="$(arg joint_planning_result_topic)"/>
     </node>
 
     <node pkg="panda_dagger" type="panda_absolute_controller" name="panda_absolute_controller">
         <param name="pose_topic" value="$(arg pose_topic)"/>
+        <param name="abs_planning_result_topic" value="$(arg abs_planning_result_topic)"/>
     </node>
 
     <node pkg="panda_dagger" type="panda_delta_controller" name="panda_delta_controller">
         <param name="pose_delta_topic" value="$(arg pose_delta_topic)"/>
+        <param name="delta_planning_result_topic" value="$(arg delta_planning_result_topic)"/>
     </node>
     
 </launch>
