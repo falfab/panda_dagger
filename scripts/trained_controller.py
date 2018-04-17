@@ -86,8 +86,8 @@ def main():
                 
                 #dataset_handler.save()
                 break
-            print "compute master policy"
-            moveit_handler.compute_master_policy(ring_handler)
+            #print "compute master policy"
+            #moveit_handler.compute_master_policy(ring_handler)
 
             mat = bridge.imgmsg_to_cv2(LAST_IMAGE, desired_encoding='passthrough')
 
