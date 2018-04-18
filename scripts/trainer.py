@@ -36,7 +36,7 @@ for index, d in enumerate(data):
         print "concatenated",index,"/",len(data) 
 
     mat = bridge.imgmsg_to_cv2(d[0], desired_encoding='passthrough')
-    action = [d[1].x,d[1].y,d[1].z]
+    action = [d[1][0],d[1][1],d[1][2]]
     image_all[index] = mat
     action_all[index] = action
 

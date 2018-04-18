@@ -41,7 +41,7 @@ def main():
     init_ring = True
     init_panda = True
 
-    for i in range(10000):
+    for i in range(50):
         print "Iteration: ", i
         
         dataset_handler = DatasetHandler(i)        
@@ -79,7 +79,10 @@ def main():
             print "wait robot moving..."
             moveit_handler.wait(moveit_handler.target_pose)
             print "done."
-            dataset_handler.append((LAST_IMAGE, moveit_handler.delta_pose.pose.position))
+            dataset_handler.append((LAST_IMAGE,
+                [ moveit_handler.delta_pose.pose.position.x,
+                  moveit_handler.delta_pose.pose.position.y,
+                  moveit_handler.delta_pose.pose.position.z] ) )
             
         
 
