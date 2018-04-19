@@ -23,16 +23,19 @@ class Agent(object):
 
         tl.layers.initialize_global_variables(self.sess)
 
-        print()
+        print "-------- LAYERS ----------"
         self.n_test.print_layers()
-        print()
+        print "-------- PARAMS ----------"        
         self.n_test.print_params(False)
         print()
         # exit()
 
     def _build_net(self, is_train=True, reuse=None):
         with tf.variable_scope(self.name, reuse=reuse) as vs:
-            tl.layers.set_name_reuse(reuse)
+            #tl.layers.set_name_reuse(reuse)
+
+            # TODO: set the same seed to DropoutLayer?
+            # TODO: set the data_format to have same execution on CPU and GPU
 
             n = InputLayer(self.x / 255, name='in')
 
