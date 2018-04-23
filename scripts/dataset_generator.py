@@ -32,6 +32,7 @@ def main():
     ring_handler = RingHandler()
 
     rospy.Subscriber("/vrep_ros_interface/image", Image, image_callback)
+    rospy.Subscriber("/ring_current_position", Pose, ring_handler.update_ring_pose)
 
     pub_ring = rospy.Publisher(conf.get('Ring', 'PositionTopic'), Pose, queue_size=1)
     pub_joint_controller = rospy.Publisher('/dagger/joint_states', JointState, queue_size=1)

@@ -23,6 +23,11 @@ class RingHandler(ConfigHandler):
             self.conf.getfloat('Ring', 'Height')
         )
 
+    def update_ring_pose(self, pose):
+        print "updating ring position", pose.position
+        pose.position.x += 0.5
+        self.ring_coordinate = pose.position
+
     def get_ring_pose(self):
         pose = Pose()
         pose.position = self.ring_coordinate
