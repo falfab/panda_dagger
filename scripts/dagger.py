@@ -1,19 +1,17 @@
-
-import random
 import os
-import rospy
-import cv_bridge
-import agent
 
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
+
+import agent
+import cv_bridge
+import rospy
 
 from moveit_handler import MoveItHandler
 from ring_handler import RingHandler
-from dataset_handler import DatasetHandler
 from config_handler import ConfigHandler
 
-from geometry_msgs.msg import PoseStamped, Pose, Point
+from geometry_msgs.msg import PoseStamped, Pose
 from sensor_msgs.msg import Image, JointState
 
 # Setting current working directory to the directory containing the file
@@ -138,48 +136,42 @@ def main():
                 init_ring = False
                 rospy.sleep(1)
                 continue
+            # TODO riguardare criterio di stop
             if moveit_handler.get_step_size(ring_handler.ring_coordinate) < conf.getfloat('Goal', 'GraspHeight') \
-                    or not ring_handler.is_ring_visible(moveit_handler.current_pose):                
+                    or not ring_handler.is_ring_visible(moveit_handler.current_pose):
                 rospy.sleep(1)
                 init_ring = True
-                init_panda = True                
+                init_panda = True
                 break
-            
+
             # save master policy
             print "computing master policy and appending to dataset"
-            moveit_handler.compute_master_policy(ring_handler)            
-            mat = bridge.imgmsg_to_cv2(LAST_IMAGE, desired_encoding='passthrough')
+            moveit_handler.compute_master_policy(ring_handler)
+            mat = bridge.imgmsg_to_cv2(
+                LAST_IMAGE, desired_encoding='passthrough')
+
             images_all[dataset_index] = mat
-            actions_all[dataset_index] = [ moveit_handler.delta_pose.pose.position.x,
-                                           moveit_handler.delta_pose.pose.position.y,
-                                           moveit_handler.delta_pose.pose.position.z ]
+            actions_all[dataset_index] = [
+                moveit_handler.delta_pose.pose.position.x,
+                moveit_handler.delta_pose.pose.position.y,
+                moveit_handler.delta_pose.pose.position.z]
+
             dataset_index = dataset_index + 1
             iteration = iteration + 1
-            
 
             print "compute trained policy"
-            moveit_handler.compute_trained_policy(model,mat)
+            moveit_handler.compute_trained_policy(model, mat)
             pub_delta_controller.publish(moveit_handler.delta_pose)
 
             moveit_handler.update_target_pose()
             print "wait robot moving..."
             moveit_handler.wait(moveit_handler.target_pose)
-            print "done."    
-    
+            print "done."
+
         # do training
         print "Retraining... ", i
         model.train(images_all[:dataset_index], actions_all[:dataset_index])
         model.save_model()
-    
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
-
-
-
-
