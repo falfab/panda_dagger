@@ -17,7 +17,7 @@ print ("create session")
 sess = tf.InteractiveSession()
 
 print ("create agent")
-model = agent.Agent(name='model_trained', sess=sess)
+model = agent.Agent(name='model', sess=sess)
 
 # carica dataset da convertire in np
 os.chdir(os.path.dirname(os.path.realpath(__file__)))

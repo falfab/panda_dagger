@@ -82,7 +82,7 @@ class Agent(object):
         return a
 
     def save_model(self):
-        tl.files.save_npz(self.n_test.all_params, name=self.name, sess=self.sess)
+        tl.files.save_npz(self.n_test.all_params, name=self.name+'.npz', sess=self.sess)
 
     def load_model(self):
-        tl.files.load_and_assign_npz(sess=self.sess, name=self.name, network=self.n_test)
+        tl.files.load_and_assign_npz(sess=self.sess, name=self.name+'.npz', network=self.n_test)

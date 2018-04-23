@@ -149,6 +149,7 @@ def main():
                 init_ring = True
                 init_panda = True
                 num_grasps += 1
+                iteration = 0
                 continue
 
             if not ring_handler.is_ring_visible(moveit_handler.current_pose):

@@ -36,7 +36,7 @@ def image_callback(image):
 def main():
 
     sess = tf.InteractiveSession()
-    model = agent.Agent(name='model_trained', sess=sess)
+    model = agent.Agent(name='model', sess=sess)
     model.load_model()
 
     rospy.init_node('dagger_test_node')
