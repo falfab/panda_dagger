@@ -12,3 +12,5 @@ class ConfigHandler(object):
     def getfloat(self, section, name):
         return self.conf.getfloat(section, name)
 
+    def getint(self, section, name):
+        return self.conf.getint(section, name)
