@@ -65,13 +65,10 @@ def main():
         init_panda = True
         while not rospy.is_shutdown():
             if init_panda:
-                # TODO: Da resettare target_joint_states alla posizione iniziale
-                print "moving to: ", moveit_handler.target_joint_states
+                print "moving to home position"
                 pub_joint_controller.publish(moveit_handler.target_joint_states)
                 init_panda = False
-                print "wait robot moving..."
                 moveit_handler.wait(moveit_handler.target_joint_states)
-                print "done."
                 continue
             if init_ring:
                 print "setting ring to random pose"
@@ -111,15 +108,15 @@ def main():
 
             mat = bridge.imgmsg_to_cv2(LAST_IMAGE, desired_encoding='passthrough')
 
-            print "compute trained policy"
+            # print "compute trained policy"
             moveit_handler.compute_trained_policy(model,mat)
 
             pub_delta_controller.publish(moveit_handler.delta_pose)
 
             moveit_handler.update_target_pose()
-            print "wait robot moving..."
+            # print "wait robot moving..."
             moveit_handler.wait(moveit_handler.target_pose)
-            print "done."
+            # print "done."
 
 if __name__ == '__main__':
     main()

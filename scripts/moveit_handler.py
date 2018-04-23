@@ -114,7 +114,7 @@ class MoveItHandler(ConfigHandler):
             self.delta_pose.pose.position = Point(0., 0., ss * -1.)
         else:
             self.delta_pose.pose.position = Point(0., 0., 0.)
-        print self.delta_pose.pose.position.x, self.delta_pose.pose.position.y, self.delta_pose.pose.position.z
+        print "master policy:  ",self.delta_pose.pose.position.x, self.delta_pose.pose.position.y, self.delta_pose.pose.position.z
 
     def compute_trained_policy(self, net, image):
         """
@@ -123,5 +123,5 @@ class MoveItHandler(ConfigHandler):
         act = net.predict( np.reshape(image,
             (1, agent.img_dim[0], agent.img_dim[1], agent.img_dim[2])))
 
-        print act[0][0],act[0][1],act[0][2]
+        print "trained policy: ", act[0][0],act[0][1],act[0][2]
         self.delta_pose.pose.position = Point(act[0][0],act[0][1],act[0][2])
