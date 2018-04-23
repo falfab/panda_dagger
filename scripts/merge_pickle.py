@@ -5,11 +5,14 @@ the dataset folder
 import pickle
 import glob
 import os
+from rospkg import RosPack
+
+os.chdir(RosPack().get_path('panda_dagger'))
 
 
-def main():
+def dataset_merge():
     """merge file inside dataset"""
-    os.chdir("../dataset")
+    os.chdir("./dataset")
     merged_vect = []
 
     # read all the dataset file
@@ -26,5 +29,5 @@ def main():
     for dataset in glob.glob("dataset*.pkl"):
         os.remove(dataset)
 
-if __name__ == "__Main__":
-    main()
+# if __name__ == "__Main__":
+#     main()

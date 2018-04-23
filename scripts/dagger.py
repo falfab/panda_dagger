@@ -1,4 +1,4 @@
-import os
+import rospkg
 
 import numpy as np
 import tensorflow as tf
@@ -14,11 +14,7 @@ from config_handler import ConfigHandler
 from geometry_msgs.msg import PoseStamped, Pose
 from sensor_msgs.msg import Image, JointState
 
-# Setting current working directory to the directory containing the file
-os.chdir(os.path.dirname(os.path.realpath(__file__)))
-
 conf = ConfigHandler()
-
 
 global LAST_IMAGE
 LAST_IMAGE = None
@@ -28,8 +24,7 @@ def image_callback(image):
     global LAST_IMAGE
     LAST_IMAGE = image
 
-
-def main():
+def dagger():
     rospy.init_node('dagger_node')
 
     # initialize classes
@@ -60,12 +55,10 @@ def main():
         iteration = 0
         while not rospy.is_shutdown() and iteration < conf.getint('Dagger', 'MaxActions'):
             if init_panda:
-                print "moving to: ", moveit_handler.target_joint_states
+                print "moving to home position"
                 pub_joint_controller.publish(moveit_handler.target_joint_states)
                 init_panda = False
-                print "wait robot moving..."
                 moveit_handler.wait(moveit_handler.target_joint_states)
-                print "done."
                 continue
             if init_ring:
                 print "setting ring to random pose"
@@ -82,7 +75,6 @@ def main():
                 init_ring = True
                 init_panda = True
                 break
-            print "compute master policy"
             moveit_handler.compute_master_policy(ring_handler)
             
             mat = bridge.imgmsg_to_cv2(LAST_IMAGE, desired_encoding='passthrough')
@@ -95,9 +87,7 @@ def main():
             
             pub_delta_controller.publish(moveit_handler.delta_pose)
             moveit_handler.update_target_pose()
-            print "wait robot moving..."
-            moveit_handler.wait(moveit_handler.target_pose)
-            print "done."            
+            moveit_handler.wait(moveit_handler.target_pose)     
             
     pass
     
@@ -124,12 +114,10 @@ def main():
         init_panda = True
         while not rospy.is_shutdown() and num_grasps < conf.getint('Dagger','TrainedIterations') and keep_grasping:
             if init_panda:
-                print "moving to: ", moveit_handler.target_joint_states
+                print "moving to home position"
                 pub_joint_controller.publish(moveit_handler.target_joint_states)
                 init_panda = False
-                print "wait robot moving..."
                 moveit_handler.wait(moveit_handler.target_joint_states)
-                print "done."
                 continue
             if init_ring:
                 print "setting ring to random pose"
@@ -188,19 +176,17 @@ def main():
             dataset_index = dataset_index + 1
             iteration = iteration + 1
 
-            print "compute trained policy"
             moveit_handler.compute_trained_policy(model, mat)
             pub_delta_controller.publish(moveit_handler.delta_pose)
 
             moveit_handler.update_target_pose()
-            print "wait robot moving..."
             moveit_handler.wait(moveit_handler.target_pose)
-            print "done."
+
 
         # do training
         print "Retraining... ", i
         model.train(images_all[:dataset_index], actions_all[:dataset_index], print_freq=5)
         model.save_model()
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     main()

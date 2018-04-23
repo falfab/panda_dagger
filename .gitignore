@@ -4,4 +4,9 @@
 
 *.pyc
 
-scripts/model_trained.npz
+scripts/*.npz
+models/
+
+dataset/
+
+venv/

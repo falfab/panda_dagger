@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 import random
-import os
 import rospy
+import os
+from rospkg import RosPack
 
 from moveit_handler import MoveItHandler
 from ring_handler import RingHandler
@@ -12,7 +13,7 @@ from geometry_msgs.msg import PoseStamped, Pose, Point
 from sensor_msgs.msg import Image, JointState
 
 # Setting current working directory to the directory containing the file
-os.chdir(os.path.dirname(os.path.realpath(__file__)))
+os.chdir(RosPack().get_path('panda_dagger'))
 
 conf = ConfigHandler()
 
@@ -25,7 +26,7 @@ def image_callback(image):
     LAST_IMAGE = image
 
 
-def main():
+def dataset_generator():
     rospy.init_node('dataset_generator_node')
 
     moveit_handler = MoveItHandler()
@@ -48,13 +49,10 @@ def main():
         dataset_handler = DatasetHandler(i)        
         while not rospy.is_shutdown():
             if init_panda:
-                # TODO: Da resettare target_joint_states alla posizione iniziale
-                print "moving to: ", moveit_handler.target_joint_states
+                print "moving to ready position"
                 pub_joint_controller.publish(moveit_handler.target_joint_states)
                 init_panda = False
-                print "wait robot moving..."
                 moveit_handler.wait(moveit_handler.target_joint_states)
-                print "done."
                 continue
             if init_ring:
                 print "setting ring to random pose"
@@ -70,10 +68,8 @@ def main():
                 rospy.sleep(3)
                 init_ring = True
                 init_panda = True
-                
                 dataset_handler.save()
                 break
-            print "compute master policy"
             moveit_handler.compute_master_policy(ring_handler)
                         
             dataset_handler.append((LAST_IMAGE,
@@ -83,12 +79,10 @@ def main():
             
             pub_delta_controller.publish(moveit_handler.delta_pose)
             moveit_handler.update_target_pose()
-            print "wait robot moving..."
             moveit_handler.wait(moveit_handler.target_pose)
-            print "done."
             
         
 
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     main()

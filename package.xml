@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>panda_dagger</name>
-  <version>0.0.0</version>
+  <version>0.1.0</version>
   <description>The panda_dagger package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
@@ -66,7 +66,7 @@
   <exec_depend>joint_state_publisher</exec_depend>
   <exec_depend>robot_state_publisher</exec_depend>
   <exec_depend>xacro</exec_depend>
-  
+
 
 
   <!-- The export tag contains other, unspecified, tags -->

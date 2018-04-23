@@ -1,7 +1,10 @@
 import tensorflow as tf
 import tensorlayer as tl
-from tensorlayer.layers import *
+from tensorlayer.layers import InputLayer, Conv2d, MaxPool2d, DropoutLayer, FlattenLayer, DenseLayer
 import time
+
+import os
+from rospkg import RosPack
 
 img_dim = [64, 64, 3]
 n_action = 3
@@ -27,16 +30,10 @@ class Agent(object):
         self.n_test.print_layers()
         print "-------- PARAMS ----------"        
         self.n_test.print_params(False)
-        print()
         # exit()
 
     def _build_net(self, is_train=True, reuse=None):
-        with tf.variable_scope(self.name, reuse=reuse) as vs:
-            #tl.layers.set_name_reuse(reuse)
-
-            # TODO: set the same seed to DropoutLayer?
-            # TODO: set the data_format to have same execution on CPU and GPU
-
+        with tf.variable_scope(self.name, reuse=reuse):
             n = InputLayer(self.x / 255, name='in')
 
             n = Conv2d(n, 32, (3, 3), (1, 1), tf.nn.relu, "VALID", name='c1/1')
@@ -48,7 +45,6 @@ class Agent(object):
             n = Conv2d(n, 64, (3, 3), (1, 1), tf.nn.relu, "VALID", name='c2/1')
             n = Conv2d(n, 64, (3, 3), (1, 1), tf.nn.relu, "VALID", name='c2/2')
             n = MaxPool2d(n, (2, 2), (2, 2), 'VALID', name='max2')
-            # print(n.outputs)
             n = DropoutLayer(n, 0.75, is_fix=True, is_train=is_train, name='drop2')
 
             n = FlattenLayer(n, name='f')
@@ -82,7 +78,13 @@ class Agent(object):
         return a
 
     def save_model(self):
+        os.chdir(RosPack().get_path('panda_dagger'))
+        if not os.path.exists("./models"):
+            os.mkdir("./models")
+        os.chdir("./models")
         tl.files.save_npz(self.n_test.all_params, name=self.name+'.npz', sess=self.sess)
 
     def load_model(self):
+        os.chdir(RosPack().get_path('panda_dagger'))
+        os.chdir("./models")
         tl.files.load_and_assign_npz(sess=self.sess, name=self.name+'.npz', network=self.n_test)

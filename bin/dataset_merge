@@ -1,0 +1,6 @@
+#! /usr/bin/env python
+
+from merge_pickle import dataset_merge
+
+if __name__ == "__main__":
+    dataset_merge()

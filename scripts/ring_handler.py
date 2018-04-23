@@ -25,7 +25,7 @@ class RingHandler(ConfigHandler):
         )
 
     def update_ring_pose(self, pose):
-        # print "updating ring position", pose.position
+        # delta between vrep and rviz on x of 0.5!!
         pose.position.x += 0.5
         self.ring_coordinate = pose.position
 

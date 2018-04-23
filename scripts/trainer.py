@@ -4,6 +4,7 @@ import os
 import numpy as np
 import tensorflow as tf
 import cv_bridge
+from rospkg import RosPack
 
 def img_reshape(input_img):
     #""" (3, 64, 64) --> (64, 64, 3) """
@@ -20,11 +21,11 @@ print ("create agent")
 model = agent.Agent(name='model', sess=sess)
 
 # carica dataset da convertire in np
-os.chdir(os.path.dirname(os.path.realpath(__file__)))
+os.chdir(RosPack().get_path('panda_dagger'))
 
 print("load data")
 data = []
-with open('../dataset/merged.pkl', 'rb') as fd:
+with open('./dataset/merged.pkl', 'rb') as fd:
     data = pickle.load(fd)
 
 print  "concatenate",len(data),"image" 

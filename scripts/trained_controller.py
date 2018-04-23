@@ -2,6 +2,7 @@
 import random
 import os
 import rospy
+from rospkg import RosPack
 
 from moveit_handler import MoveItHandler
 from ring_handler import RingHandler
@@ -20,7 +21,7 @@ import numpy as np
 import cv_bridge
 
 # Setting current working directory to the directory containing the file
-os.chdir(os.path.dirname(os.path.realpath(__file__)))
+os.chdir(RosPack().get_path('panda_dagger'))
 
 conf = ConfigHandler()
 
@@ -33,7 +34,7 @@ def image_callback(image):
     LAST_IMAGE = image
 
 
-def main():
+def trained_controller():
 
     sess = tf.InteractiveSession()
     model = agent.Agent(name='model', sess=sess)
@@ -118,5 +119,5 @@ def main():
             moveit_handler.wait(moveit_handler.target_pose)
             # print "done."
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     main()

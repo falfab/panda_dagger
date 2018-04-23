@@ -263,3 +263,18 @@ add_dependencies(panda_joint_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${ca
 target_link_libraries(panda_joint_controller
   ${catkin_LIBRARIES}
 )
+
+
+# Python setup
+catkin_python_setup()
+catkin_install_python(PROGRAMS bin/dagger
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+catkin_install_python(PROGRAMS bin/dataset_generator
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+catkin_install_python(PROGRAMS bin/trained_controller
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+catkin_install_python(PROGRAMS bin/dataset_merge
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
