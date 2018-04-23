@@ -3,6 +3,7 @@ import random
 import os
 import rospy
 import cv_bridge
+import agent
 
 import tensorflow as tf
 import numpy as np
@@ -45,19 +46,20 @@ def main():
     pub_delta_controller = rospy.Publisher('/dagger/delta_pose', PoseStamped, queue_size=1)
     
     # dataset initialization
-    images_all = np.zeros( (conf.get('Dagger', 'MaxArrayLen'), agent.img_dim[0], agent.img_dim[1], agent.img_dim[2]) )
-    actions_all = np.zeros( (conf.get('Dagger', 'MaxArrayLen'), agent.n_action) )
+    images_all = np.zeros( (conf.getint('Dagger', 'MaxArrayLen'), agent.img_dim[0], agent.img_dim[1], agent.img_dim[2]) )
+    actions_all = np.zeros( (conf.getint('Dagger', 'MaxArrayLen'), agent.n_action) )
     dataset_index = 0
     
+    rospy.sleep(1)
     init_ring = True
     init_panda = True
     
     # collect master policy
-    for i in range(conf.get('Dagger', 'MasterIterations')):
+    for i in range(conf.getint('Dagger', 'MasterIterations')):
         print "Master iteration: ", i
         
         iteration = 0
-        while not rospy.is_shutdown() and iteration < conf.get('Dagger', 'MaxActions'):
+        while not rospy.is_shutdown() and iteration < conf.getint('Dagger', 'MaxActions'):
             if init_panda:
                 print "moving to: ", moveit_handler.target_joint_states
                 pub_joint_controller.publish(moveit_handler.target_joint_states)
@@ -102,7 +104,7 @@ def main():
     
     # do first training over partial data
     sess = tf.InteractiveSession()
-    model = Agent(sess=sess)
+    model = agent.Agent(sess=sess)
     model.train(images_all, actions_all, print_freq=5)
     
     mode.save_model('model_dagger_first_train')
@@ -110,11 +112,11 @@ def main():
     # loop    
     init_ring = True
     init_panda = True
-    for i in range(conf.get('Dagger', 'DaggerIterations')):
+    for i in range(conf.getint('Dagger', 'DaggerIterations')):
         print "Dagger iteration: ", i
         
         iteration = 0
-        while not rospy.is_shutdown() and iteration < conf.get('Dagger', 'MaxActions'):
+        while not rospy.is_shutdown() and iteration < conf.getint('Dagger', 'MaxActions'):
             if init_panda:
                 print "moving to: ", moveit_handler.target_joint_states
                 pub_joint_controller.publish(moveit_handler.target_joint_states)
