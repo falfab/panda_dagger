@@ -105,15 +105,18 @@ def main():
     # do first training over partial data
     sess = tf.InteractiveSession()
     model = agent.Agent(sess=sess)
-    model.train(images_all, actions_all, print_freq=5)
+    model.train(images_all[:dataset_index], actions_all[:dataset_index], print_freq=5)
     
-    mode.save_model('model_dagger_first_train')
+    model.save_model()
     
     # loop    
     init_ring = True
     init_panda = True
     for i in range(conf.getint('Dagger', 'DaggerIterations')):
         print "Dagger iteration: ", i
+        
+        
+        # TODO for every iteration reward
         
         iteration = 0
         while not rospy.is_shutdown() and iteration < conf.getint('Dagger', 'MaxActions'):
@@ -165,10 +168,9 @@ def main():
     
         # do training
         print "Retraining... ", i
-        model.train(images_all, actions_all)
-        model.save_model('model_dagger_%02i' % i)
+        model.train(images_all[:dataset_index], actions_all[:dataset_index])
+        model.save_model()
     
-    model.save_model('model_dagger_end')
 
 if __name__ == '__main__':
     main()

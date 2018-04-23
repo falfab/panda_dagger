@@ -1,4 +1,5 @@
 import random
+import math
 from datetime import datetime
 from geometry_msgs.msg import Pose, Point
 
@@ -48,7 +49,7 @@ class RingHandler(ConfigHandler):
         # coordinates of the visible square on surface
         robot_z = current_pose.pose.position.z - ring_radius # TODO add offset!
         
-        delta = robot_z * sqrt(3)/3
+        delta = robot_z * math.sqrt(3)/3
         min_x = current_pose.pose.position.x - delta
         max_x = current_pose.pose.position.x + delta        
         min_y = current_pose.pose.position.y - delta
