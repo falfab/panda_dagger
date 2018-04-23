@@ -40,3 +40,34 @@ class RingHandler(ConfigHandler):
             else (self.ring_coordinate.y + self.conf.getfloat('Ring', 'Radius')),
             self.conf.getfloat('Goal', 'GoalHeight')
         )
+        
+    def is_ring_visible(self, current_pose):
+        ring_radius = self.conf.getfloat('Ring','Radius') 
+    
+        # delta = lenght/2 of vision's square sides
+        # coordinates of the visible square on surface
+        robot_z = current_pose.pose.position.z - ring_radius # TODO add offset!
+        
+        delta = robot_z * sqrt(3)/3
+        min_x = current_pose.pose.position.x - delta
+        max_x = current_pose.pose.position.x + delta        
+        min_y = current_pose.pose.position.y - delta
+        max_y = current_pose.pose.position.y + delta        
+        
+        # for edges point for ring
+        p1x = self.ring_coordinate.x - ring_radius
+        p1y = self.ring_coordinate.y
+        p2x = self.ring_coordinate.x + ring_radius
+        p2y = self.ring_coordinate.y
+        p3x = self.ring_coordinate.x
+        p3y = self.ring_coordinate.y - ring_radius
+        p4x = self.ring_coordinate.x
+        p4y = self.ring_coordinate.y + ring_radius
+        
+        return (p1x > min_x and p1x < max_x and p1y > min_y and p1y < max_y) or \
+               (p2x > min_x and p2x < max_x and p2y > min_y and p2y < max_y) or \
+               (p3x > min_x and p3x < max_x and p3y > min_y and p3y < max_y) or \
+               (p4x > min_x and p4x < max_x and p4y > min_y and p4y < max_y)
+
+
+

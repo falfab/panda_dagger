@@ -81,8 +81,8 @@ class Agent(object):
         a = self.sess.run(self.n_test.outputs, {self.x : image})
         return a
 
-    def save_model(self):
-        tl.files.save_npz(self.n_test.all_params, name=self.name+'.npz', sess=self.sess)
+    def save_model(self, name='model'):
+        tl.files.save_npz(self.n_test.all_params, name=name+'.npz', sess=self.sess)
 
-    def load_model(self):
-        tl.files.load_and_assign_npz(sess=self.sess, name=self.name+'.npz', network=self.n_test)
+    def load_model(self, name='model'):
+        tl.files.load_and_assign_npz(sess=self.sess, name=name+'.npz', network=self.n_test)
