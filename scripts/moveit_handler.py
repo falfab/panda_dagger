@@ -37,13 +37,13 @@ class MoveItHandler(ConfigHandler):
 
         self.current_joint_states = self.move_group.get_current_joint_values()
 
-    def get_step_size(self, ring_coodrdinate):
+    def get_step_size(self, ring_coordinate):
 
         self.update_current_pose()
         robot_point = self.current_pose.pose.position
-        d_x = robot_point.x - ring_coodrdinate.x
-        d_y = robot_point.y - ring_coodrdinate.y
-        d_z = robot_point.z - ring_coodrdinate.z
+        d_x = robot_point.x - ring_coordinate.x
+        d_y = robot_point.y - ring_coordinate.y
+        d_z = robot_point.z - ring_coordinate.z
         d_xy = math.sqrt(d_x**2 + d_y**2)
         distance = math.sqrt(d_xy**2 + d_z**2)
 

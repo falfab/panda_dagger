@@ -77,7 +77,7 @@ def main():
                 init_ring = False
                 rospy.sleep(1)
                 continue
-            if moveit_handler.get_step_size(ring_handler.ring_coordinate) < conf.getfloat('Goal', 'GraspHeight'):
+            if moveit_handler.get_step_size(ring_handler.ring_coordinate) < conf.getfloat('Goal', 'MinStep'):
                 rospy.sleep(1)
                 init_ring = True
                 init_panda = True
@@ -118,7 +118,11 @@ def main():
         # TODO for every iteration reward
         
         iteration = 0
-        while not rospy.is_shutdown() and iteration < conf.getint('Dagger', 'MaxActions'):
+        num_grasps = 0
+        keep_grasping = True
+        init_ring = True
+        init_panda = True
+        while not rospy.is_shutdown() and num_grasps < conf.getint('Dagger','TrainedIterations') and keep_grasping:
             if init_panda:
                 print "moving to: ", moveit_handler.target_joint_states
                 pub_joint_controller.publish(moveit_handler.target_joint_states)
@@ -137,13 +141,36 @@ def main():
                 init_ring = False
                 rospy.sleep(1)
                 continue
-            # TODO riguardare criterio di stop
-            if moveit_handler.get_step_size(ring_handler.ring_coordinate) < conf.getfloat('Goal', 'GraspHeight') \
-                    or not ring_handler.is_ring_visible(moveit_handler.current_pose):
+
+            if moveit_handler.get_step_size(ring_handler.ring_coordinate) < conf.getfloat('Goal', 'MinStep'):
+                # succesfull trained
+                print "grasp successfull"
                 rospy.sleep(1)
                 init_ring = True
                 init_panda = True
-                break
+                num_grasps += 1
+                continue
+
+            if not ring_handler.is_ring_visible(moveit_handler.current_pose):
+                # failed trained
+                print "ring no more visible"
+                rospy.sleep(1)
+                keep_grasping = False
+                continue
+
+            if iteration > conf.getint('Dagger', 'MaxActions'):
+                # failed trained
+                print "Too many iterations for a single grasp"
+                rospy.sleep(1)
+                keep_grasping = False
+                continue
+
+            if moveit_handler.current_pose.pose.position.z < conf.getfloat('Goal','GoalHeight'):
+                # failed trained
+                print "robot too close to the ground"
+                rospy.sleep(1)
+                keep_grasping = False
+                continue
 
             # save master policy
             print "computing master policy and appending to dataset"
@@ -171,7 +198,7 @@ def main():
 
         # do training
         print "Retraining... ", i
-        model.train(images_all[:dataset_index], actions_all[:dataset_index])
+        model.train(images_all[:dataset_index], actions_all[:dataset_index], print_freq=5)
         model.save_model()
 
 if __name__ == '__main__':

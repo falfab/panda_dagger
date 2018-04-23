@@ -66,7 +66,7 @@ def main():
                 init_ring = False
                 rospy.sleep(1)
                 continue
-            if moveit_handler.get_step_size(ring_handler.ring_coordinate) < conf.getfloat('Goal', 'GraspHeight'):
+            if moveit_handler.get_step_size(ring_handler.ring_coordinate) < conf.getfloat('Goal', 'MinStep'):
                 rospy.sleep(3)
                 init_ring = True
                 init_panda = True
