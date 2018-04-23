@@ -60,6 +60,9 @@ def main():
         print "Iteration: ", i
         
         #dataset_handler = DatasetHandler(i)        
+        iteration = 0
+        init_ring = True
+        init_panda = True
         while not rospy.is_shutdown():
             if init_panda:
                 # TODO: Da resettare target_joint_states alla posizione iniziale
@@ -80,15 +83,31 @@ def main():
                 init_ring = False
                 rospy.sleep(1)
                 continue
+
             if moveit_handler.get_step_size(ring_handler.ring_coordinate) < conf.getfloat('Goal', 'MinStep'):
-                rospy.sleep(3)
-                init_ring = True
-                init_panda = True
-                
-                #dataset_handler.save()
+                # succesfull trained
+                print "grasp successfull"
+                rospy.sleep(1)
+                iteration = 0
                 break
-            #print "compute master policy"
-            #moveit_handler.compute_master_policy(ring_handler)
+
+            if not ring_handler.is_ring_visible(moveit_handler.current_pose):
+                # failed trained
+                print "ring no more visible"
+                rospy.sleep(1)
+                break
+
+            if iteration > conf.getint('Dagger', 'MaxActions'):
+                # failed trained
+                print "Too many iterations for a single grasp"
+                rospy.sleep(1)
+                break
+
+            if moveit_handler.current_pose.pose.position.z < conf.getfloat('Goal','GoalHeight'):
+                # failed trained
+                print "robot too close to the ground"
+                rospy.sleep(1)
+                break
 
             mat = bridge.imgmsg_to_cv2(LAST_IMAGE, desired_encoding='passthrough')
 
