@@ -26,7 +26,7 @@ def image_callback(image):
 
 
 def main():
-    rospy.init_node('dagger_test_node')
+    rospy.init_node('dataset_generator_node')
 
     moveit_handler = MoveItHandler()
     ring_handler = RingHandler()
@@ -74,15 +74,17 @@ def main():
                 break
             print "compute master policy"
             moveit_handler.compute_master_policy(ring_handler)
+                        
+            dataset_handler.append((LAST_IMAGE,
+                [ moveit_handler.delta_pose.pose.position.x,
+                  moveit_handler.delta_pose.pose.position.y,
+                  moveit_handler.delta_pose.pose.position.z] ) )
+            
             pub_delta_controller.publish(moveit_handler.delta_pose)
             moveit_handler.update_target_pose()
             print "wait robot moving..."
             moveit_handler.wait(moveit_handler.target_pose)
             print "done."
-            dataset_handler.append((LAST_IMAGE,
-                [ moveit_handler.delta_pose.pose.position.x,
-                  moveit_handler.delta_pose.pose.position.y,
-                  moveit_handler.delta_pose.pose.position.z] ) )
             
         
 

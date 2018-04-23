@@ -5,7 +5,7 @@ import pickle
 class DatasetHandler():
     def __init__(self, num=None):
         self.dataset = []
-        self.outfile = "../dataset/dataset%d.pkl" % num if num else "../dataset/dataset.pkl"
+        self.outfile = "../dataset/dataset%d.pkl" % num if num != None else "../dataset/dataset.pkl"
         if not os.path.exists("../dataset"):
             os.mkdir("../dataset")
 
