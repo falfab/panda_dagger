@@ -10,3 +10,5 @@ models/
 dataset/
 
 venv/
+
+experiment_*
