@@ -32,13 +32,9 @@ def dagger():
     timestamp = time.strftime('%d_%b_%Y_%H_%M_%S', t)
     name = "experiment_"+timestamp+'.csv'
     csvfile =  open(name,'w')
-    csvfile.write("# master iter {}, dagger iter {}, trained iter {}\n".format(
-        conf.getint('Dagger', 'MasterIterations'),
-        conf.getint('Dagger', 'DaggerIterations'),
-        conf.getint('Dagger', 'TrainedIterations'))
-        )
-
     csv_writer = csv.writer(csvfile)
+    csv_writer.writerow(["MasterIterations","DaggerIterations","TrainedIterations","Phase","daggerRetrain","iteration","success","time","steps"])
+
     rospy.init_node('dagger_node')
 
     # initialize classes
@@ -64,8 +60,6 @@ def dagger():
     iteration = 0
     start_time = time.time()
 
-    csvfile.write("# master policy\n")
-    csvfile.write("# n. iteration, time, n. step\n")
     # collect master policy
     for i in range(conf.getint('Dagger', 'MasterIterations')):
         print "Master iteration: ", i
@@ -90,7 +84,16 @@ def dagger():
                 start_time = time.time()
                 continue
             if moveit_handler.get_step_size(ring_handler.ring_coordinate) < conf.getfloat('Goal', 'MinStep'):
-                csv_writer.writerow([i,time.time()-start_time,iteration])
+                #MasterIterations, DaggerIterations, TrainedIterations, Phase, daggerRetrain, iteration, success, time, steps
+                csv_writer.writerow([ conf.getint('Dagger', 'MasterIterations'),
+                    conf.getint('Dagger', 'DaggerIterations'),
+                    conf.getint('Dagger', 'TrainedIterations'),
+                    'master',
+                    0,
+                    i,
+                    True,
+                    time.time()-start_time,
+                    iteration])
                 rospy.sleep(1)
                 init_ring = True
                 init_panda = True
@@ -119,9 +122,6 @@ def dagger():
     model.save_model()
     
     # loop    
-    csvfile.write("# training dagger\n")
-    csvfile.write("# n. iteration, n. dagger iteration, success, time, n. step\n")
-
     init_ring = True
     init_panda = True
     start_time = time.time()
@@ -157,7 +157,16 @@ def dagger():
             if moveit_handler.get_step_size(ring_handler.ring_coordinate) < conf.getfloat('Goal', 'MinStep'):
                 # succesfull trained
                 print "grasp successfull"
-                csv_writer.writerow([i,num_grasps,int(True),time.time()-start_time,iteration])
+                #MasterIterations, DaggerIterations, TrainedIterations, Phase, daggerRetrain, iteration, success, time, steps
+                csv_writer.writerow([ conf.getint('Dagger', 'MasterIterations'),
+                    conf.getint('Dagger', 'DaggerIterations'),
+                    conf.getint('Dagger', 'TrainedIterations'),
+                    'training',
+                    i,
+                    num_grasps,
+                    True,
+                    time.time()-start_time,
+                    iteration])
                 rospy.sleep(1)
                 init_ring = True
                 init_panda = True
@@ -168,14 +177,32 @@ def dagger():
             if not ring_handler.is_ring_visible(moveit_handler.current_pose):
                 # failed trained
                 print "ring no more visible"
-                csv_writer.writerow([i,num_grasps,int(False),time.time()-start_time,iteration])
+                #MasterIterations, DaggerIterations, TrainedIterations, Phase, daggerRetrain, iteration, success, time, steps
+                csv_writer.writerow([ conf.getint('Dagger', 'MasterIterations'),
+                    conf.getint('Dagger', 'DaggerIterations'),
+                    conf.getint('Dagger', 'TrainedIterations'),
+                    'training',
+                    i,
+                    num_grasps,
+                    False,
+                    time.time()-start_time,
+                    iteration])
                 rospy.sleep(1)
                 keep_grasping = False
                 continue
 
             if iteration > conf.getint('Dagger', 'MaxActions'):
                 # failed trained
-                csv_writer.writerow([i,num_grasps,int(False),time.time()-start_time,iteration])
+                #MasterIterations, DaggerIterations, TrainedIterations, Phase, daggerRetrain, iteration, success, time, steps
+                csv_writer.writerow([ conf.getint('Dagger', 'MasterIterations'),
+                    conf.getint('Dagger', 'DaggerIterations'),
+                    conf.getint('Dagger', 'TrainedIterations'),
+                    'training',
+                    i,
+                    num_grasps,
+                    False,
+                    time.time()-start_time,
+                    iteration])
                 print "Too many iterations for a single grasp"
                 rospy.sleep(1)
                 keep_grasping = False
@@ -183,7 +210,16 @@ def dagger():
 
             if moveit_handler.current_pose.pose.position.z < conf.getfloat('Goal','GoalHeight'):
                 # failed trained
-                csv_writer.writerow([i,num_grasps,int(False),time.time()-start_time,iteration])
+                #MasterIterations, DaggerIterations, TrainedIterations, Phase, daggerRetrain, iteration, success, time, steps
+                csv_writer.writerow([ conf.getint('Dagger', 'MasterIterations'),
+                    conf.getint('Dagger', 'DaggerIterations'),
+                    conf.getint('Dagger', 'TrainedIterations'),
+                    'training',
+                    i,
+                    num_grasps,
+                    False,
+                    time.time()-start_time,
+                    iteration])
                 print "robot too close to the ground"
                 rospy.sleep(1)
                 keep_grasping = False
@@ -216,9 +252,6 @@ def dagger():
         model.train(images_all[:dataset_index], actions_all[:dataset_index], print_freq=5)
         model.save_model()
 
-    csvfile.write("# training dagger\n")
-    csvfile.write("# n. iteration, success, time, n. step\n")
-
     success_count = 0
     failure_count = 0
     start_time = time.time()
@@ -230,7 +263,7 @@ def dagger():
         iteration = 0
         while not rospy.is_shutdown() and keep_grasping:
             if init_panda:
-                print "iteration",count
+                print "trained iteration",count
                 print "moving to home position"
                 pub_joint_controller.publish(moveit_handler.target_joint_states)
                 init_panda = False
@@ -250,14 +283,32 @@ def dagger():
             if moveit_handler.get_step_size(ring_handler.ring_coordinate) < conf.getfloat('Goal', 'MinStep'):
                 # succesfull trained
                 print "grasp successfull"
-                csv_writer.writerow([i,int(True),time.time()-start_time,iteration])
+                #MasterIterations, DaggerIterations, TrainedIterations, Phase, daggerRetrain, iteration, success, time, steps
+                csv_writer.writerow([ conf.getint('Dagger', 'MasterIterations'),
+                    conf.getint('Dagger', 'DaggerIterations'),
+                    conf.getint('Dagger', 'TrainedIterations'),
+                    'autonomous',
+                    0,
+                    count,
+                    True,
+                    time.time()-start_time,
+                    iteration])
                 rospy.sleep(1)
                 keep_grasping = False
                 success_count+=1
                 continue
             if not ring_handler.is_ring_visible(moveit_handler.current_pose):
                 # failed trained
-                csv_writer.writerow([i,int(False),time.time()-start_time,iteration])
+                #MasterIterations, DaggerIterations, TrainedIterations, Phase, daggerRetrain, iteration, success, time, steps
+                csv_writer.writerow([ conf.getint('Dagger', 'MasterIterations'),
+                    conf.getint('Dagger', 'DaggerIterations'),
+                    conf.getint('Dagger', 'TrainedIterations'),
+                    'autonomous',
+                    0,
+                    count,
+                    False,
+                    time.time()-start_time,
+                    iteration])
                 print "ring no more visible"
                 rospy.sleep(1)
                 keep_grasping = False
@@ -265,7 +316,16 @@ def dagger():
                 continue
             if iteration > conf.getint('Dagger', 'MaxActions'):
                 # failed trained
-                csv_writer.writerow([i,int(False),time.time()-start_time,iteration])
+                #MasterIterations, DaggerIterations, TrainedIterations, Phase, daggerRetrain, iteration, success, time, steps
+                csv_writer.writerow([ conf.getint('Dagger', 'MasterIterations'),
+                    conf.getint('Dagger', 'DaggerIterations'),
+                    conf.getint('Dagger', 'TrainedIterations'),
+                    'autonomous',
+                    0,
+                    count,
+                    False,
+                    time.time()-start_time,
+                    iteration])
                 print "Too many iterations for a single grasp"
                 rospy.sleep(1)
                 keep_grasping = False
@@ -273,7 +333,16 @@ def dagger():
                 continue
             if moveit_handler.current_pose.pose.position.z < conf.getfloat('Goal','GoalHeight'):
                 # failed trained
-                csv_writer.writerow([i,int(False),time.time()-start_time,iteration])
+                #MasterIterations, DaggerIterations, TrainedIterations, Phase, daggerRetrain, iteration, success, time, steps
+                csv_writer.writerow([ conf.getint('Dagger', 'MasterIterations'),
+                    conf.getint('Dagger', 'DaggerIterations'),
+                    conf.getint('Dagger', 'TrainedIterations'),
+                    'autonomous',
+                    0,
+                    count,
+                    False,
+                    time.time()-start_time,
+                    iteration])
                 print "robot too close to the ground"
                 rospy.sleep(1)
                 keep_grasping = False
